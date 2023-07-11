@@ -1,0 +1,9 @@
+.inputbox{
+        @apply text-slate-900 max-w-[40ch] m-2 p-2
+     }
+.button{
+    @apply bg-slate-50 text-slate-900 w-full max-w-[15ch] text-center p-2
+}
+.div1{
+    @apply flex flex-col items-center justify-center
+}
