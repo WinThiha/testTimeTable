@@ -22,16 +22,33 @@ export default function studentAttendance() {
     }, [])
     console.log(stdata.timestamp)
     const attendanceHandler = async(updateId)=>{
-        console.log(stdata[0].present_dates)
         
         
         const docRef = doc(db, 'Students', updateId)
         const currentDate = new Date()
         const fieldName = currentDate.toDateString();
+        const test = 'Present'
         const date = serverTimestamp()
         await setDoc(docRef, {
             'present_dates': {
-               [fieldName]  : 'present'
+                [fieldName] : test
+            }
+            
+        }, { merge: true }
+        )
+        
+    }
+    const absentHandler = async(updateId)=>{
+        
+        
+        const docRef = doc(db, 'Students', updateId)
+        const currentDate = new Date()
+        const fieldName = currentDate.toDateString();
+        const test = 'Present'
+        const date = serverTimestamp()
+        await setDoc(docRef, {
+            'present_dates': {
+                [fieldName] : 'Absent'
             }
             
         }, { merge: true }
@@ -62,6 +79,11 @@ export default function studentAttendance() {
                         <td><i onClick={()=>{
                             attendanceHandler(st.id)
                         }} className="fa-regular fa-circle-check"></i></td>
+                        <td>
+                        <i onClick={()=>{
+                            absentHandler(st.id)
+                        }} className="fa-sharp fa-solid fa-xmark"></i>
+                        </td>
                         
                     </tr></>)}
 
