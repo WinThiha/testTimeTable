@@ -1,12 +1,15 @@
 import useFetchData from '@/hooks/fetchData'
 import React, { useState } from 'react'
 import styles from '@/components/tailwind.module.css'
-import { collection, doc, getDocs, onSnapshot, query, where } from 'firebase/firestore'
+import { collection, doc, getDocs, onSnapshot, orderBy, query, where } from 'firebase/firestore'
 import { db } from '@/firebase'
 import moment from 'moment'
 import { data } from 'autoprefixer'
 
 export default function previousRecords() {
+    const [year,setYear] = useState('')
+    const [sem,setSem] = useState('')
+    const [major,setMajor] = useState('')
     const [filteredData,setFilteredData] = useState('')
     const [filteredDate,setFilteredDate] = useState('')
     const [status,setStatus] = useState('');
@@ -14,22 +17,33 @@ export default function previousRecords() {
     const [name,setName] = useState('')
     const {stdata,setStdata} = useFetchData()
     const filterNameHandler =async ()=>{
-        const stuRef = collection(db, 'Students')
+        const stuRef = collection(db, `AttendanceDB/Years/children/${year}/semesters/${sem}/majors/${major}/Students`)
         const q = query(stuRef,where('std_name','==',name))
         const querySnapshot = await getDocs(q);
 querySnapshot.forEach((doc) => {
-  // doc.data() is never undefined for query doc snapshots
   setFilteredData(doc.data())
   console.log(doc.data().present_dates.Present)
 })
     }
     const filterDateHandler = async (status)=>{
         setFilteredDate([])
-        const stuRef = collection(db,'Students')
+        const stuRef = collection(db,`AttendanceDB/Years/children/${year}/semesters/${sem}/majors/${major}/Students`)
         const q=query(stuRef,where(`present_dates.${date}`,'==',status))
         const querySnapshot = await getDocs(q);
         querySnapshot.forEach((doc) => {
-          // doc.data() is never undefined for query doc snapshots
+          onSnapshot(q, (querySnapshots) => {
+            setFilteredDate(querySnapshots.docs.map(doc => ({ ...doc.data(), id: doc.id, timestamp: doc.data().timestamp?.toDate().getTime() })))
+          })
+          
+        })
+        
+    }
+    const filterOnlyDateHandler = async ()=>{
+        setFilteredDate([])
+        const stuRef = collection(db,`AttendanceDB/Years/children/${year}/semesters/${sem}/majors/${major}/Students`)
+        const q=query(stuRef,orderBy(`present_dates.${date}`))
+        const querySnapshot = await getDocs(q);
+        querySnapshot.forEach((doc) => {
           onSnapshot(q, (querySnapshots) => {
             setFilteredDate(querySnapshots.docs.map(doc => ({ ...doc.data(), id: doc.id, timestamp: doc.data().timestamp?.toDate().getTime() })))
           })
@@ -39,9 +53,14 @@ querySnapshot.forEach((doc) => {
     }
   return (
     <div className={styles.div1}>
+         <input className={styles.inputbox} placeholder='Enter Year' onChange={(e)=>{setYear(e.currentTarget.value)}}/>
+        <input className={styles.inputbox} placeholder='Enter Sem' onChange={(e)=>{setSem(e.currentTarget.value)}}/>
+
+        <input className={styles.inputbox} placeholder='Enter Major' onChange={(e)=>{setMajor(e.currentTarget.value)}}/>
         <h2>By Date</h2>
         
                 <input className={styles.inputbox} onChange={(e)=>setDate(e.currentTarget.value)}></input>
+                <button className={styles.button} onClick={filterOnlyDateHandler}>Show all Students on Date</button>
                 <input className={styles.inputbox} onChange={(e)=>setStatus(e.currentTarget.value)}></input>
 
         <button className={styles.button} onClick={()=>filterDateHandler(status)}>Show Present Students on Date</button>
