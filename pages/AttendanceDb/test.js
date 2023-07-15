@@ -96,7 +96,8 @@ export default function () {
 
             </tbody>
         </table>
-        <Link href='../students/previousRecords'>Test</Link>
+        <Link href='../students/previousRecords'>Test Filtering</Link>
+        <Link href={'/'}>Go to Home</Link>
         </>
     )
 }

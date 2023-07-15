@@ -31,7 +31,7 @@ export default function studentAttendance() {
         const date = serverTimestamp()
         await setDoc(docRef, {
             'present_dates': {
-                [fieldName] : test
+                Present : fieldName
             }
             
         }, { merge: true }
@@ -48,7 +48,7 @@ export default function studentAttendance() {
         const date = serverTimestamp()
         await setDoc(docRef, {
             'present_dates': {
-                [fieldName] : 'Absent'
+                Absent : fieldName
             }
             
         }, { merge: true }

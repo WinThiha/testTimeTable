@@ -1,12 +1,14 @@
 import useFetchData from '@/hooks/fetchData'
 import React, { useState } from 'react'
 import styles from '@/components/tailwind.module.css'
-import { collection, doc, getDocs, onSnapshot, orderBy, query, where } from 'firebase/firestore'
+import { collection, doc, getDoc, getDocs, onSnapshot, orderBy, query, where } from 'firebase/firestore'
 import { db } from '@/firebase'
 import moment from 'moment'
 import { data } from 'autoprefixer'
+import Link from 'next/link'
 
 export default function previousRecords() {
+  const [showPercentTable,setShowPercentTable] = useState(false)
     const [year,setYear] = useState('')
     const [sem,setSem] = useState('')
     const [major,setMajor] = useState('')
@@ -15,7 +17,9 @@ export default function previousRecords() {
     const [status,setStatus] = useState('');
     const [date,setDate] = useState('')
     const [name,setName] = useState('')
-    const {stdata,setStdata} = useFetchData()
+    const [stdata,setStData] = useState([])
+    
+    const [percent,setPercent] =useState(0)
     const filterNameHandler =async ()=>{
         const stuRef = collection(db, `AttendanceDB/Years/children/${year}/semesters/${sem}/majors/${major}/Students`)
         const q = query(stuRef,where('std_name','==',name))
@@ -49,6 +53,44 @@ querySnapshot.forEach((doc) => {
           })
           
         })
+        
+    }
+    const percentHandler = async()=>{
+      let alldates = []
+      let totalDates = 0;
+      let presentDates= 0;
+      const stuRef = collection(db, `AttendanceDB/Years/children/${year}/semesters/${sem}/majors/${major}/Students`)
+      const q = query(stuRef,where('std_name','==',name))
+      const querySnapshot = await getDocs(q);
+      
+querySnapshot.forEach(async (attendances) => {
+  setStData(attendances.data())
+  Object.keys(attendances.data().present_dates).map(async (date)=>{
+    console.log(date)
+    alldates.push(date)
+  
+console.log(alldates)
+   
+  })
+  totalDates =alldates.length
+
+
+  
+    })
+    for(const presents of alldates){
+      console.log(presents)
+      const presentQ = doc(db, `AttendanceDB/Years/children/${year}/semesters/${sem}/majors/${major}/Students/${name}`)
+      const presentSnapshot = await getDoc(presentQ)
+      presentSnapshot.data().present_dates[presents] === 'Present' ? presentDates += 1 : null
+      
+      
+    
+    }
+
+    console.log(presentDates)
+  
+    console.log(totalDates)
+    setPercent(Math.floor((presentDates/totalDates)*100))
         
     }
   return (
@@ -147,7 +189,37 @@ querySnapshot.forEach((doc) => {
 </tbody>
 </table>
 }
+<input className={styles.inputbox} placeholder='Enter Year Name' onChange={(e)=>{setYear(e.currentTarget.value)}}/>
+<input className={styles.inputbox} placeholder='Enter Sem Name' onChange={(e)=>{setSem(e.currentTarget.value)}}/>
+<input className={styles.inputbox} placeholder='Enter Major Name' onChange={(e)=>{setMajor(e.currentTarget.value)}}/>
+<input className={styles.inputbox} placeholder='Enter Student Name' onChange={(e)=>{setName(e.currentTarget.value)}}/>
+<button className={styles.button} onClick={()=>{
+  setShowPercentTable(true)
+  percentHandler()
+}}>Show Percent</button>
+{showPercentTable == true ? <table className="table table-striped table-dark">
+<thead>
+    <tr>
         
+        <th scope="col">Name</th>
+        <th scope="col">Email</th>
+        <th scope="col">Percent</th>
+        
+    </tr>
+</thead>
+<tbody>
+    <tr>
+      <td scope='row'>{stdata.std_name}</td>
+      <td scope='row'>{stdata.std_email}</td>
+      <td scope='row'>{percent}</td>
+    </tr>
+
+</tbody>
+</table>
+: null
+
+}
+<Link href={'/'}>Go Home</Link>
     </div>
   )
 }

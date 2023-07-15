@@ -14,7 +14,7 @@ const inter = Inter({ subsets: ['latin'] })
 export default function Home() {
   return (
     <div>
-    <DataTable></DataTable>
+    
     <AddYear></AddYear>
     <AddMajors></AddMajors>
     <AddData></AddData>
