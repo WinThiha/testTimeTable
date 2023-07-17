@@ -11,13 +11,21 @@ export default function AddYear() {
      await setDoc(docRef, {
         name : year
      })
-     const sem1Ref = collection(db,`AttendanceDB/Years/children/${year}/semesters/sem1/majors`)
-     await addDoc(sem1Ref,{
-        test : 'test'
+     const sem1Ref = doc(db,`AttendanceDB/Years/children/${year}/semesters/sem1`)
+     await setDoc(sem1Ref,{
+        blank : 'blank'
      })
-     const sem2Ref = collection(db,`AttendanceDB/Years/children/${year}/semesters/sem2/majors`)
-     await addDoc(sem2Ref,{
-        test : 'test'
+     const sem2Ref = doc(db,`AttendanceDB/Years/children/${year}/semesters/sem2`)
+     await setDoc(sem2Ref,{
+        blank : 'blank'
+     })
+     const majorRef1 = doc(db,`AttendanceDB/Years/children/${year}/semesters/sem1/majors`)
+     await setDoc(sem1Ref,{
+        blank : 'blank'
+     })
+     const majorRef2 = doc(db,`AttendanceDB/Years/children/${year}/semesters/sem2/majors`)
+     await setDoc(sem2Ref,{
+        blank : 'blank'
      })
      
      setYear('')

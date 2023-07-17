@@ -1,11 +1,14 @@
 import { db } from '@/firebase'
-import { collection, doc, getDoc, getDocs, onSnapshot, orderBy, query, serverTimestamp, setDoc } from 'firebase/firestore'
+import { addDoc, collection, doc, getDoc, getDocs, onSnapshot, orderBy, query, serverTimestamp, setDoc, where } from 'firebase/firestore'
 import React, { useState } from 'react'
 import styles from '@/components/tailwind.module.css'
 import Link from 'next/link'
 import moment from 'moment'
+import useCalculateAttendancePercent from '@/hooks/calculateAttendancePercent'
 
 export default function () {
+    const {majorPercent,totalPercent} = useCalculateAttendancePercent()
+    const [status,setStatus] = useState('')
     const [year,setYear] = useState('')
     const [sem,setSem] = useState('')
     const [major,setMajor] = useState('')
@@ -20,39 +23,31 @@ export default function () {
         return unsubscribe
     }
     
-    console.log(stdata.timestamp)
-    const attendanceHandler = async(updateId)=>{
+  
+    const attendanceHandler = async(updateId,status)=>{
         
         
         const docRef = doc(db, `AttendanceDB/Years/children/${year}/semesters/${sem}/majors/${major}/Students`, updateId)
         const currentDate = new Date()
         const fieldName = currentDate.toDateString();
-        const test = 'Present'
+        const test = status
         const date = serverTimestamp()
-        await setDoc(docRef, {
-            'present_dates': {
-                [fieldName] : test
+        status === 'Present' ?  setDoc(docRef, {
+            'attendance_dates': {
+                [fieldName] : 'Present'
             }
             
         }, { merge: true }
-        )
         
-    }
-    const absentHandler = async(updateId)=>{
-        
-        
-        const docRef = doc(db, `AttendanceDB/Years/children/${year}/semesters/${sem}/majors/${major}/Students`, updateId)
-        const currentDate = new Date()
-        const fieldName = currentDate.toDateString();
-        const test = 'Present'
-        const date = serverTimestamp()
-        await setDoc(docRef, {
-            'present_dates': {
+        ) :  setDoc(docRef, {
+            'attendance_dates': {
                 [fieldName] : 'Absent'
             }
             
         }, { merge: true }
         )
+        
+        majorPercent(year,sem,updateId,major)
         
     }
     
@@ -83,12 +78,16 @@ export default function () {
                         <td>{st.std_name}</td>
                         <td>{st.std_email}</td>
                         <td>{moment(st.timestamp).format('MMMM Do YYYY')}</td>
-                        <td><i onClick={()=>{
-                            attendanceHandler(st.id)
+                        <td><i onClick={async()=>{
+                           attendanceHandler(st.id,'Present')
+                            
+                            
                         }} className="fa-regular fa-circle-check"></i></td>
                         <td>
-                        <i onClick={()=>{
-                            absentHandler(st.id)
+                        <i onClick={async ()=>{
+                           attendanceHandler(st.id,"Absent")
+                           
+                            
                         }} className="fa-sharp fa-solid fa-xmark"></i>
                         </td>
                         

@@ -8,6 +8,8 @@ import { data } from 'autoprefixer'
 import Link from 'next/link'
 
 export default function previousRecords() {
+  const [AllMajors,setAllMajors] = useState([])
+  const [showAllPercent,setShowAllPercent] = useState(false)
   const [showPercentTable,setShowPercentTable] = useState(false)
     const [year,setYear] = useState('')
     const [sem,setSem] = useState('')
@@ -18,6 +20,7 @@ export default function previousRecords() {
     const [date,setDate] = useState('')
     const [name,setName] = useState('')
     const [stdata,setStData] = useState([])
+    const [StudentsNames,setStudentsNames] = useState({names : []})
     
     const [percent,setPercent] =useState(0)
     const filterNameHandler =async ()=>{
@@ -26,13 +29,13 @@ export default function previousRecords() {
         const querySnapshot = await getDocs(q);
 querySnapshot.forEach((doc) => {
   setFilteredData(doc.data())
-  console.log(doc.data().present_dates.Present)
+  console.log(doc.data().attendance_dates.Present)
 })
     }
     const filterDateHandler = async (status)=>{
         setFilteredDate([])
         const stuRef = collection(db,`AttendanceDB/Years/children/${year}/semesters/${sem}/majors/${major}/Students`)
-        const q=query(stuRef,where(`present_dates.${date}`,'==',status))
+        const q=query(stuRef,where(`attendance_dates.${date}`,'==',status))
         const querySnapshot = await getDocs(q);
         querySnapshot.forEach((doc) => {
           onSnapshot(q, (querySnapshots) => {
@@ -45,7 +48,7 @@ querySnapshot.forEach((doc) => {
     const filterOnlyDateHandler = async ()=>{
         setFilteredDate([])
         const stuRef = collection(db,`AttendanceDB/Years/children/${year}/semesters/${sem}/majors/${major}/Students`)
-        const q=query(stuRef,orderBy(`present_dates.${date}`))
+        const q=query(stuRef,orderBy(`attendance_dates.${date}`))
         const querySnapshot = await getDocs(q);
         querySnapshot.forEach((doc) => {
           onSnapshot(q, (querySnapshots) => {
@@ -65,7 +68,7 @@ querySnapshot.forEach((doc) => {
       
 querySnapshot.forEach(async (attendances) => {
   setStData(attendances.data())
-  Object.keys(attendances.data().present_dates).map(async (date)=>{
+  Object.keys(attendances.data().attendance_dates).map(async (date)=>{
     console.log(date)
     alldates.push(date)
   
@@ -81,7 +84,7 @@ console.log(alldates)
       console.log(presents)
       const presentQ = doc(db, `AttendanceDB/Years/children/${year}/semesters/${sem}/majors/${major}/Students/${name}`)
       const presentSnapshot = await getDoc(presentQ)
-      presentSnapshot.data().present_dates[presents] === 'Present' ? presentDates += 1 : null
+      presentSnapshot.data().attendance_dates[presents] === 'Present' ? presentDates += 1 : null
       
       
     
@@ -93,9 +96,44 @@ console.log(alldates)
     setPercent(Math.floor((presentDates/totalDates)*100))
         
     }
+    const showAllPercentHandler = async()=>{
+      const colRef = collection(db,`AttendanceDB/Years/children/Fourth Year/semesters/sem2/majors`)
+      const q = query(colRef,orderBy('name'))
+      const majors = await getDocs(q)
+      majors.forEach(async (mj)=>{
+       if(mj.data().name){
+        setAllMajors(AllMajors.push(mj.data().name))
+        const stuRef = collection(db,`AttendanceDB/Years/children/Fourth Year/semesters/sem2/majors/${mj.data().name}/Students`)
+        const students = await getDocs(stuRef)
+        students.forEach((student)=>{
+          if(stdata.indexOf(student.data().std_name)=== -1)
+{
+  setStData(stdata.push(student.data().std_name))
+
+}else{
+  setStData(stdata)
+}     })
+       }
+      })
+      console.log(stdata)
+      console.log(AllMajors)
+      console.log(Object.values(stdata))
+      for(const st of stdata){
+        console.log(st)
+      }
+      Array.from(stdata).forEach((st)=>console.log(stdata[st]))
+  for(const majors of AllMajors){
+    console.log(majors)
+  }
+    }
   return (
     <div className={styles.div1}>
-         <input className={styles.inputbox} placeholder='Enter Year' onChange={(e)=>{setYear(e.currentTarget.value)}}/>
+      <button className={styles.button}onClick={()=>{
+        showAllPercentHandler()
+        setShowAllPercent(true)
+      }}>Test Percent for All</button>
+{/*       {showAllPercent == true ? console.log(AllMajors) : <p>click button</p> }
+ */}         <input className={styles.inputbox} placeholder='Enter Year' onChange={(e)=>{setYear(e.currentTarget.value)}}/>
         <input className={styles.inputbox} placeholder='Enter Sem' onChange={(e)=>{setSem(e.currentTarget.value)}}/>
 
         <input className={styles.inputbox} placeholder='Enter Major' onChange={(e)=>{setMajor(e.currentTarget.value)}}/>
@@ -124,9 +162,9 @@ console.log(alldates)
                     
                         
                         
-                        {Object.keys(filteredData.present_dates).map((date)=>{
+                        {Object.keys(filteredData.attendance_dates).map((date)=>{
                             return <tr key={filteredData.id}>
-                              {filteredData.present_dates[date]==='Absent' ? <td>{date}</td> :null } 
+                              {filteredData.attendance_dates[date]==='Absent' ? <td>{date}</td> :null } 
 
                             </tr>
                         })}
@@ -150,9 +188,9 @@ console.log(alldates)
                     
                         
                         
-                        {Object.keys(filteredData.present_dates).map((date)=>{
+                        {Object.keys(filteredData.attendance_dates).map((date)=>{
                             return <tr key={filteredData.id}>
-                              {filteredData.present_dates[date]==='Present' ? <td>{date}</td> :null } 
+                              {filteredData.attendance_dates[date]==='Present' ? <td>{date}</td> :null } 
 
                             </tr>
                         })}
@@ -180,7 +218,7 @@ console.log(alldates)
             <th scope='row' key={dates.id}>{dates.id}</th>
             <td>{dates.std_name}</td>
             <td>{dates.std_email}</td>
-            <td>{dates.present_dates[date]==="Present"? <i className="fa-solid fa-circle-check"></i> : <i className="fa-sharp fa-solid fa-xmark"></i>}</td>
+            <td>{dates.attendance_dates[date]==="Present"? <i className="fa-solid fa-circle-check"></i> : <i className="fa-sharp fa-solid fa-xmark"></i>}</td>
             
         </tr>
 

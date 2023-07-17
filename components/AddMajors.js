@@ -1,5 +1,5 @@
 import { db } from '@/firebase'
-import { addDoc, collection, doc, setDoc } from 'firebase/firestore'
+import { addDoc, collection, doc, getDocs, setDoc } from 'firebase/firestore'
 import React, { useState } from 'react'
 import styles from './tailwind.module.css'
 export default function AddMajors() {
@@ -13,6 +13,13 @@ export default function AddMajors() {
             name :major
         },{merge : true})
     
+        const stuRef = collection(db,`students`)
+        const students = await getDocs(stuRef)
+        students.forEach(async(student)=>{
+          const colRef = doc(db,`AttendanceDB/Years/children/${year}/semesters/${sem}/majors/${major}/Students/${student.data().std_id}`)
+          await setDoc(colRef,student.data())
+        })
+        
      
     
    }
