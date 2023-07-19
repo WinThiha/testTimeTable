@@ -11,13 +11,15 @@ export default function useCalculateAttendancePercent() {
       const q = query(stuRef,where('std_id','==',updateId))
       const querySnapshot = await getDocs(q);
       
-querySnapshot.forEach(async (attendances) => {
+querySnapshot.forEach(async (attendances) => {if(attendances.data().attendance_dates){
   Object.keys(attendances.data().attendance_dates).map(async (date)=>{
    
     alldates.push(date)
   })
   console.log(alldates)
   totalDates =alldates.length
+}
+  
     })
     for(const presents of alldates){
       console.log(presents)
@@ -26,9 +28,14 @@ querySnapshot.forEach(async (attendances) => {
       presentSnapshot.data().attendance_dates[presents] === 'Present' ? presentDates += 1 : null
 
     }
- 
+    console.log(totalDates)
+    console.log(presentDates)
+    console.log(presentDates/totalDates)
+    if(totalDates !== 0){
+      const percent = (Math.floor((presentDates/totalDates)*100) ) === NaN ? 0 : Math.floor((presentDates/totalDates)*100)
     await setDoc(doc(db,`students/${updateId}`),{
-        [`${major} attendanc-percent`] : Math.floor((presentDates/totalDates)*100)},{merge : true})
+        [`${major} attendance-percent`] : percent},{merge : true})
+    }
     
         
     }

@@ -13,14 +13,25 @@ export default function () {
     const [sem,setSem] = useState('')
     const [major,setMajor] = useState('')
     const [stdata, setStdata] = useState([])
+    const [showDate,setShowDate] = useState(false)
+    const [date,setDate] = useState('')
     const showStudentsHandler = async()=>{
-        const collectionRef = collection(db, `AttendanceDB/Years/children/${year}/semesters/${sem}/majors/${major}/Students`)
-        const q = query(collectionRef, orderBy("timestamp", "desc"));
-
+        const collectionRef = collection(db, `students`)
+        const q = query(collectionRef, orderBy("std_id", "desc"));
+        
         const unsubscribe = onSnapshot(q, (querySnapshots) => {
             setStdata(querySnapshots.docs.map(doc => ({ ...doc.data(), id: doc.id, timestamp: doc.data().timestamp?.toDate().getTime() })))
         })
+        console.log(stdata.attendance_percent)
+        setShowDate(true)
         return unsubscribe
+    }
+    const dateHandler = async()=>{
+        const currentDate = new Date().toDateString()
+        setDate(currentDate)
+        const docRef = doc(db,`Dates/${major} Dates`)
+        await setDoc(docRef,{[currentDate] : true })
+        
     }
     
   
@@ -30,16 +41,15 @@ export default function () {
         const docRef = doc(db, `AttendanceDB/Years/children/${year}/semesters/${sem}/majors/${major}/Students`, updateId)
         const currentDate = new Date()
         const fieldName = currentDate.toDateString();
-        const test = status
         const date = serverTimestamp()
-        status === 'Present' ?  setDoc(docRef, {
+        status === 'Present' ? await setDoc(docRef, {
             'attendance_dates': {
                 [fieldName] : 'Present'
             }
             
         }, { merge: true }
         
-        ) :  setDoc(docRef, {
+        ) : await setDoc(docRef, {
             'attendance_dates': {
                 [fieldName] : 'Absent'
             }
@@ -47,7 +57,7 @@ export default function () {
         }, { merge: true }
         )
         
-        majorPercent(year,sem,updateId,major)
+       majorPercent(year,sem,updateId,major)
         
     }
     
@@ -60,14 +70,15 @@ export default function () {
         <input className={styles.inputbox} placeholder='Enter Major' onChange={(e)=>{setMajor(e.currentTarget.value)}}/>
 
         <button className={styles.button} onClick={showStudentsHandler}>Show Students</button>
-
+        {showDate == true && <button className={styles.button} onClick={dateHandler}>Start Date</button>}
+        <p>{date}</p>
         <table className="table table-striped table-dark">
             <thead>
                 <tr>
                     <th scope="col">#</th>
                     <th scope="col">Name</th>
                     <th scope="col">Email</th>
-                    <th scope="col">Time Added</th>
+                    <th scope="col">Percent to Date</th>
                     <th scope='col'></th>
                 </tr>
             </thead>
@@ -77,7 +88,7 @@ export default function () {
                         <th scope='row'>{st.id}</th>
                         <td>{st.std_name}</td>
                         <td>{st.std_email}</td>
-                        <td>{moment(st.timestamp).format('MMMM Do YYYY')}</td>
+                        <td>{st[`${major} attendance-percent`]}</td>
                         <td><i onClick={async()=>{
                            attendanceHandler(st.id,'Present')
                             
@@ -85,7 +96,7 @@ export default function () {
                         }} className="fa-regular fa-circle-check"></i></td>
                         <td>
                         <i onClick={async ()=>{
-                           attendanceHandler(st.id,"Absent")
+                           attendanceHandler(st.id,'Absent')
                            
                             
                         }} className="fa-sharp fa-solid fa-xmark"></i>
