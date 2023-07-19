@@ -30,7 +30,7 @@ export default function () {
         const currentDate = new Date().toDateString()
         setDate(currentDate)
         const docRef = doc(db,`Dates/${major} Dates`)
-        await setDoc(docRef,{[currentDate] : true })
+        await setDoc(docRef,{[currentDate] : true },{merge : true})
         
     }
     
@@ -58,7 +58,7 @@ export default function () {
         )
         
        majorPercent(year,sem,updateId,major)
-        
+        totalPercent(updateId)
     }
     
     return (
@@ -70,7 +70,7 @@ export default function () {
         <input className={styles.inputbox} placeholder='Enter Major' onChange={(e)=>{setMajor(e.currentTarget.value)}}/>
 
         <button className={styles.button} onClick={showStudentsHandler}>Show Students</button>
-        {showDate == true && <button className={styles.button} onClick={dateHandler}>Start Date</button>}
+        {showDate == true && <button className={styles.button} onClick={dateHandler}>Add Date</button>}
         <p>{date}</p>
         <table className="table table-striped table-dark">
             <thead>

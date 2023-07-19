@@ -19,14 +19,7 @@ export default function AddYear() {
      await setDoc(sem2Ref,{
         blank : 'blank'
      })
-     const majorRef1 = doc(db,`AttendanceDB/Years/children/${year}/semesters/sem1/majors`)
-     await setDoc(sem1Ref,{
-        blank : 'blank'
-     })
-     const majorRef2 = doc(db,`AttendanceDB/Years/children/${year}/semesters/sem2/majors`)
-     await setDoc(sem2Ref,{
-        blank : 'blank'
-     })
+    
      
      setYear('')
    }

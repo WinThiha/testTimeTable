@@ -17,7 +17,7 @@ export default function AddMajors() {
         const students = await getDocs(stuRef)
         students.forEach(async(student)=>{
           const colRef = doc(db,`AttendanceDB/Years/children/${year}/semesters/${sem}/majors/${major}/Students/${student.data().std_id}`)
-          await setDoc(colRef,student.data())
+          await setDoc(colRef,{std_email : student.data().std_email, std_name : student.data().std_name, std_id : student.data().std_id, time_added : student.data().timestamp})
         })
         
      
