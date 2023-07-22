@@ -14,7 +14,7 @@ import React, { useState } from "react";
 export default function UpdateData() {
   const [updateId, setUpdateId] = useState("");
   const [updatedName, setUpdatedName] = useState("");
-  const updatedData = { std_name: updatedName, timestamp: serverTimestamp() };
+  const updatedData = { std_name: updatedName};
 
   async function updateHandler() {
     
