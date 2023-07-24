@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react'
 import styles from '@/components/tailwind.module.css'
 import useCalculateAttendancePercent from '@/hooks/calculateAttendancePercent';
 export default function attendanceWithTT() {
-    const {majorPercent,totalForOne,totalForAll} = useCalculateAttendancePercent()
+    const {majorPercent,totalForAll} = useCalculateAttendancePercent()
 
     const [year, setYear] = useState('')
     const [sem, setSem] = useState('')
@@ -67,22 +67,25 @@ setDays(allDays)
         })
         setStData(allStudents)
     }
-    const attendanceHandler = async(updateId,status,major)=>{
-        
+    const attendanceHandler = async(updateId,status,major,index)=>{
         
         const docRef = doc(db, `AttendanceDB/Years/children/${year}/semesters/${sem}/majors/${major}/Students`, updateId)
         const currentDate = new Date()
-        const fieldName = currentDate.toString();
+        const fieldName = currentDate.toDateString();
         status === 'Present' ? await setDoc(docRef, {
             'attendance_dates': {
-                [fieldName] : 'Present'
+                [fieldName]: {
+                    [index+1] : 'Present'
+                }
             }
             
         }, { merge: true }
         
         ) : await setDoc(docRef, {
             'attendance_dates': {
-                [fieldName] : 'Absent'
+                [fieldName]: {
+                    [index+1] : 'Present'
+                }
             }
             
         }, { merge: true }
@@ -91,11 +94,10 @@ setDays(allDays)
        majorPercent(year,sem,updateId,major)
        totalForAll(year,sem,stData)
     }
-    const dateHandler = async(major)=>{
-        
-        const currentDate = new Date().toString()
-        const docRef = doc(db,`Dates/${major} Dates`)
-        await setDoc(docRef,{[currentDate] : true },{merge : true})
+    const dateHandler = async(major, index)=>{
+        const currentDate = new Date().toDateString()
+        const docRef = doc(db,`Dates/${major} Dates/Dates/${currentDate}`)
+        await setDoc(docRef,{[index+1] : true },{merge : true})
         
           
         totalForAll(year,sem,stData)
@@ -137,9 +139,9 @@ setDays(allDays)
                 <tr>
                     <th scope="col">#</th>
                     <th scope="col">Name</th>
-                    {majors.map((major)=>(
-                        <th scope='col'>{major}<i onClick={async()=>{
-                            await dateHandler(major)
+                    {majors.map((major, index)=>(
+                        <th scope='col' key={index}>{major}<i onClick={async()=>{
+                            await dateHandler(major, index)
                              
                              
                          }} className="fa-regular fa-circle-check"></i></th>
@@ -152,25 +154,14 @@ setDays(allDays)
                     <tr key={st.id}>
                         <th scope='row'>{st.id}</th>
                         <td>{st.std_name}</td>
-                        {majors.map((major)=>(
-                            <td><i onClick={()=>{
-                                attendanceHandler(st.id,'Present',major)
+                        {majors.map((major,index)=>(
+                            <td key={index}><i onClick={()=>{
+                                attendanceHandler(st.id,'Present',major,index)
                                  
                                  
                              }} className="fa-regular fa-circle-check"></i></td>
                         ))}
-                        {/* <td><i onClick={async()=>{
-                           attendanceHandler(st.id,'Present')
-                            
-                            
-                        }} className="fa-regular fa-circle-check"></i></td>
-                        <td>
-                        <i onClick={async ()=>{
-                           attendanceHandler(st.id,'Absent')
-                           
-                            
-                        }} className="fa-sharp fa-solid fa-xmark"></i>
-                        </td> */}
+                        
                         
                     </tr></>)}
 

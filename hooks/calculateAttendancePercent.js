@@ -4,42 +4,59 @@ import React from 'react'
 
 export default function useCalculateAttendancePercent() {
     const majorPercent = async(year,sem,updateId,major)=>{
-        let alldates = []
-      let totalDates = 0;
+      let allDates = []
+        let allTimes = []
+      let totalTimes = 0;
       let presentDates= 0;
-      const stuRef = collection(db, `AttendanceDB/Years/children/${year}/semesters/${sem}/majors/${major}/Students`)
-      const q = query(stuRef,where('std_id','==',updateId))
-      const querySnapshot = await getDocs(q);
-      
-querySnapshot.forEach(async (attendances) => {if(attendances.data().attendance_dates){
-  Object.keys(attendances.data().attendance_dates).map(async (date)=>{
+      const datesRef = collection(db, `/Dates/${major} Dates/Dates`)
+      const dates = await getDocs(datesRef)
+      dates.forEach(async (date)=>{
+        allDates.push(date.id)
+        const timesRef = doc(datesRef,date.id)
+        const times = await getDoc(timesRef)
+        Object.keys(times.data()).map(async (time)=>{
    
-    alldates.push(date)
-  })
-  totalDates =alldates.length
-}
-  
-    })
-    for(const presents of alldates){
-      const presentQ = doc(db, `AttendanceDB/Years/children/${year}/semesters/${sem}/majors/${major}/Students/${updateId}`)
-      const presentSnapshot = await getDoc(presentQ)
-      presentSnapshot.data().attendance_dates[presents] === 'Present' ? presentDates += 1 : null
-
-    }
-    if(totalDates !== 0){
-      const percent = (Math.floor((presentDates/totalDates)*100) ) === NaN ? 0 : Math.floor((presentDates/totalDates)*100)
-    await setDoc(doc(db,`students/${updateId}`),{
-        [`${major} attendance-percent`] : percent},{merge : true},
-        )
-        await setDoc(doc(db,`students/${updateId}`),{
-          [`${major} present-times`] : presentDates},{merge : true},
-          )
+          allTimes.push(time)
+        })
         
-    }
+      })
+      for(const date of allDates){
+        const stuDateRef = doc(db,`AttendanceDB/Years/children/${year}/semesters/${sem}/majors/${major}/Students/${updateId}`)
+      const stuDates = await getDoc(stuDateRef)
+      Object.keys(stuDates.data().attendance_dates).map((stDate)=>{
+        for(const time of allTimes){
+          if(stDate === date){
+            stuDates.data().attendance_dates[stDate][time] === 'Present' ? presentDates+=1 : console.log(stuDates.data().attendance_dates[stDate][time])
+          }
+        }
+      })
+      }
+      
+      
+ 
+      setTimeout(async () => {
+        console.log(allTimes);
+        totalTimes =allTimes.length
+        console.log(totalTimes)
+        console.log(presentDates)
+        if(totalTimes !== 0){
+          const percent = (Math.floor((presentDates/totalTimes)*100) ) === NaN ? 0 : Math.floor((presentDates/totalTimes)*100)
+        await setDoc(doc(db,`students/${updateId}`),{
+            [`${major} attendance-percent`] : percent},{merge : true},
+            )
+            await setDoc(doc(db,`students/${updateId}`),{
+              [`${major} present-times`] : presentDates},{merge : true},
+              )
+            
+        } 
+      }, 2000);
+ 
+ 
+    
     
         
     }
-    const totalForOne = async(updateId,year,sem)=>{
+    /* const totalForOne = async(updateId,year,sem)=>{
       let totalTimes = 0 ;
       let presentTimes = 0;
       let allMajors = []
@@ -76,18 +93,33 @@ querySnapshot.forEach(async (attendances) => {if(attendances.data().attendance_d
             total_percent: percent,
           }, { merge: true });
         
-    }
+    } */
     const totalForAll = async(year,sem,stData)=>{
       let totalTimes = 0 ;
         let presentTimes = 0;
         let allMajors = []
         const dateRef = collection(db,'Dates')
         const dates = await getDocs(dateRef)
-        dates.forEach((date)=>{
-          totalTimes += (Object.keys(date.data()).length) 
-        })
+        
+        dates.forEach(async (date) => {
+          if (date.id !== 'Total Times') {
+            const timesRef = collection(db, `Dates/${date.id}/Dates`);
+            const times = await getDocs(timesRef);
+        
+            times.forEach(async (time) => {
+              const totalTimesRef = doc(db, `Dates/${date.id}/Dates/${time.id}`);
+              const total_Times = await getDoc(totalTimesRef);
+              totalTimes += Object.keys(total_Times.data()).length;
+            });
+          }
+        });
+        
+        setTimeout(async () => {
           const totalRef = doc(db, 'Dates/Total Times')
-          await setDoc(totalRef,{totalTimes : (totalTimes-1)})
+          await setDoc(totalRef,{totalTimes : (totalTimes)})
+        }, 2000);
+        
+          
   
           const colRef = collection(db,`AttendanceDB/Years/children/${year}/semesters/${sem}/majors`)
         const q = query(colRef,orderBy('name'))
@@ -108,14 +140,13 @@ querySnapshot.forEach(async (attendances) => {if(attendances.data().attendance_d
               presentTimes += majorPresentTimes;
             }
           
-            console.log(`${st.id} : ${presentTimes} / ${totalTimes-1} = ${(presentTimes/(totalTimes-1)) * 100}`);
           
-            const percent = Number.isNaN(presentTimes / (totalTimes - 1)) ? 0 : Math.floor((presentTimes / (totalTimes - 1)) * 100);
+            const percent = Number.isNaN(presentTimes / (totalTimes)) ? 0 : Math.floor((presentTimes / (totalTimes)) * 100);
           
             await setDoc(stuRef, {
               total_percent: percent,
             }, { merge: true });
           });
     }
-  return {majorPercent,totalForOne , totalForAll}
+  return {majorPercent, totalForAll}
 }
