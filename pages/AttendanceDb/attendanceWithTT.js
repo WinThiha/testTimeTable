@@ -3,6 +3,7 @@ import { collection, doc, getDoc, getDocs, orderBy, query, serverTimestamp, setD
 import React, { useEffect, useState } from 'react'
 import styles from '@/components/tailwind.module.css'
 import useCalculateAttendancePercent from '@/hooks/calculateAttendancePercent';
+import Link from 'next/link';
 export default function attendanceWithTT() {
     const {majorPercent,totalForAll} = useCalculateAttendancePercent()
 
@@ -68,6 +69,7 @@ setDays(allDays)
         setStData(allStudents)
     }
     const attendanceHandler = async(updateId,status,major,index)=>{
+       
         
         const docRef = doc(db, `AttendanceDB/Years/children/${year}/semesters/${sem}/majors/${major}/Students`, updateId)
         const currentDate = new Date()
@@ -84,20 +86,36 @@ setDays(allDays)
         ) : await setDoc(docRef, {
             'attendance_dates': {
                 [fieldName]: {
-                    [index+1] : 'Present'
+                    [index+1] : 'Absent'
                 }
             }
             
         }, { merge: true }
         )
+        const stuRef = doc(db,`students/${updateId}`)
+        const majorFieldName = `${major} attendance_dates`
+        await setDoc(stuRef, {
+            [majorFieldName]: {
+                [fieldName]: {
+                    [index+1] : 'Present'
+                }
+            }
+            
+        }, { merge: true }
+        
+        )
         
        majorPercent(year,sem,updateId,major)
        totalForAll(year,sem,stData)
     }
-    const dateHandler = async(major, index)=>{
+    const dateHandler = async(year,sem, major, index)=>{
         const currentDate = new Date().toDateString()
         const docRef = doc(db,`Dates/${major} Dates/Dates/${currentDate}`)
         await setDoc(docRef,{[index+1] : true },{merge : true})
+        const allDatesRef = doc(db,`Dates/${year}/${sem}/All Dates`)
+        await setDoc(allDatesRef,{
+            [currentDate] : true
+        })
         
           
         totalForAll(year,sem,stData)
@@ -141,7 +159,7 @@ setDays(allDays)
                     <th scope="col">Name</th>
                     {majors.map((major, index)=>(
                         <th scope='col' key={index}>{major}<i onClick={async()=>{
-                            await dateHandler(major, index)
+                            await dateHandler(year,sem, major, index)
                              
                              
                          }} className="fa-regular fa-circle-check"></i></th>
@@ -167,6 +185,7 @@ setDays(allDays)
 
             </tbody>
         </table>
+        <Link href={'./timeTableWithDate'}>test TimeTable With Date</Link>
     </div>
   )
 }
