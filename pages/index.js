@@ -26,7 +26,7 @@ export default function Home() {
     <Link href={'./AttendanceDb/test'}>
     <p>Test Attendance Db</p>
     </Link>
-    <Link href={'./AttendanceDb/timeTable'}>
+    <Link href={'./AttendanceDb/chooseTimeTable'}>
     <p>test timetable</p></Link>
     </div>
   )

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+/* import React, { useEffect, useState } from 'react'
 import styles from '@/components/tailwind.module.css'
 import { collection, doc, getDoc, getDocs, setDoc } from 'firebase/firestore';
 import { db } from '@/firebase';
@@ -118,12 +118,7 @@ export default function makeTimeTable() {
   for (let i = 1; i <= times; i++) {
     timesHeader.push(i);
   }
-  const majorHandler = async (day, time) => {
-    const majorTimeRef = doc(db, `TimeTable/Fourth Year/sem2/${day}/time/${time}`)
-    await setDoc(majorTimeRef, {
-      major: major
-    })
-  }
+ 
   const handleCellChange = (day, time, newValue) => {
     // Create a copy of the timeTableDataObject to avoid mutating the state directly
     const newData = { ...timeTableDataObject };
@@ -168,7 +163,6 @@ export default function makeTimeTable() {
             value=""
             onChange={async (e) => {
               handleCellChange(day, time, e.target.value)
-              setMajor(e.currentTarget.value)
               
             }}
           />
@@ -228,8 +222,9 @@ export default function makeTimeTable() {
 
           </tbody>
         </table>
-
+                  <Link href={'./timeTable'}><p>Go back</p></Link>
       </div>
     </>
   )
 }
+ */

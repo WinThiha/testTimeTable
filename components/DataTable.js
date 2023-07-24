@@ -10,7 +10,7 @@ export default function DataTable() {
     const {deleteHandler} = useDeleteData()
     const [stdata, setStdata] = useState([])
     useEffect(() => {
-        const collectionRef = collection(db, 'Students')
+        const collectionRef = collection(db, 'students')
         const q = query(collectionRef, orderBy("timestamp", "desc"));
 
         const unsubscribe = onSnapshot(q, (querySnapshots) => {
