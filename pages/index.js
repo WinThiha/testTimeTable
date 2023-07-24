@@ -14,6 +14,7 @@ const inter = Inter({ subsets: ['latin'] })
 export default function Home() {
   return (
     <div>
+      <Link href='./AttendanceDb/attendanceWithTT'><p>TEST TIMETABLE ATTENDACNE</p></Link>
     <DataTable></DataTable>
     <AddYear></AddYear>
     <AddMajors></AddMajors>
