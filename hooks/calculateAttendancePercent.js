@@ -39,7 +39,7 @@ querySnapshot.forEach(async (attendances) => {if(attendances.data().attendance_d
     
         
     }
-    const totalPercent = async(updateId,year,sem)=>{
+    const totalForOne = async(updateId,year,sem)=>{
       let totalTimes = 0 ;
       let presentTimes = 0;
       let allMajors = []
@@ -48,10 +48,8 @@ querySnapshot.forEach(async (attendances) => {if(attendances.data().attendance_d
       dates.forEach((date)=>{
         totalTimes += (Object.keys(date.data()).length) 
       })
-        const totalRef = doc(db, 'Dates/Total Times')
-        await setDoc(totalRef,{totalTimes : (totalTimes-1)})
 
-        const colRef = collection(db,`AttendanceDB/Years/children/Fourth Year/semesters/sem2/majors`)
+        const colRef = collection(db,`AttendanceDB/Years/children/${year}/semesters/${sem}/majors`)
       const q = query(colRef,orderBy('name'))
       const majors = await getDocs(q)
       majors.forEach(async (mj)=>{
@@ -59,16 +57,65 @@ querySnapshot.forEach(async (attendances) => {if(attendances.data().attendance_d
         allMajors.push(mj.data().name)
         }
       })
-      const stuRef = doc(db,`students/${updateId}`)
-      const student = await getDoc(stuRef)
-      for(const major of allMajors){
-        presentTimes += student.data()[`${major} present-times`]
-      }
-      const percent = (Math.floor((presentTimes/(totalTimes-1))*100) ) === NaN ? 0 : Math.floor((presentTimes/(totalTimes-1))*100)
-      await setDoc(stuRef,{
-        total_percent : percent
-      },{merge : true})
+     
+          const stuRef = doc(db, `students/${updateId}`);
+          const student = await getDoc(stuRef);
+        
+          
+          
+          for (const major of allMajors) {
+            const majorPresentTimes = student.data()[`${major} present-times`] || 0;
+            presentTimes += majorPresentTimes;
+          }
+        
+          console.log(`${updateId} : ${presentTimes}`);
+        
+          const percent = Number.isNaN(presentTimes / (totalTimes - 1)) ? 0 : Math.floor((presentTimes / (totalTimes - 1)) * 100);
+        
+          await setDoc(stuRef, {
+            total_percent: percent,
+          }, { merge: true });
+        
     }
-    
-  return {majorPercent,totalPercent}
+    const totalForAll = async(year,sem,stData)=>{
+      let totalTimes = 0 ;
+        let presentTimes = 0;
+        let allMajors = []
+        const dateRef = collection(db,'Dates')
+        const dates = await getDocs(dateRef)
+        dates.forEach((date)=>{
+          totalTimes += (Object.keys(date.data()).length) 
+        })
+          const totalRef = doc(db, 'Dates/Total Times')
+          await setDoc(totalRef,{totalTimes : (totalTimes-1)})
+  
+          const colRef = collection(db,`AttendanceDB/Years/children/${year}/semesters/${sem}/majors`)
+        const q = query(colRef,orderBy('name'))
+        const majors = await getDocs(q)
+        majors.forEach(async (mj)=>{
+         if(mj.data().name){
+          allMajors.push(mj.data().name)
+          }
+        })
+        stData.forEach(async (st) => {
+            const stuRef = doc(db, `students/${st.id}`);
+            const student = await getDoc(stuRef);
+          
+            let presentTimes = 0;
+            
+            for (const major of allMajors) {
+              const majorPresentTimes = student.data()[`${major} present-times`] || 0;
+              presentTimes += majorPresentTimes;
+            }
+          
+            console.log(`${st.id} : ${presentTimes} / ${totalTimes-1} = ${(presentTimes/(totalTimes-1)) * 100}`);
+          
+            const percent = Number.isNaN(presentTimes / (totalTimes - 1)) ? 0 : Math.floor((presentTimes / (totalTimes - 1)) * 100);
+          
+            await setDoc(stuRef, {
+              total_percent: percent,
+            }, { merge: true });
+          });
+    }
+  return {majorPercent,totalForOne , totalForAll}
 }

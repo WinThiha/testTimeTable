@@ -1,10 +1,10 @@
 import { db } from '@/firebase';
-import { collection, doc, getDocs, serverTimestamp, setDoc } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, orderBy, query, serverTimestamp, setDoc } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react'
 import styles from '@/components/tailwind.module.css'
 import useCalculateAttendancePercent from '@/hooks/calculateAttendancePercent';
 export default function attendanceWithTT() {
-    const {majorPercent,totalPercent} = useCalculateAttendancePercent()
+    const {majorPercent,totalForOne,totalForAll} = useCalculateAttendancePercent()
 
     const [year, setYear] = useState('')
     const [sem, setSem] = useState('')
@@ -89,41 +89,18 @@ setDays(allDays)
         )
         
        majorPercent(year,sem,updateId,major)
-        /* totalPercent(updateId) */
+       totalForAll(year,sem,stData)
     }
     const dateHandler = async(major)=>{
         
         const currentDate = new Date().toString()
         const docRef = doc(db,`Dates/${major} Dates`)
         await setDoc(docRef,{[currentDate] : true },{merge : true})
-        let totalTimes = 0 ;
-        let presentTimes = 0;
-        let allMajors = []
-        const dateRef = collection(db,'Dates')
-        const dates = await getDocs(dateRef)
-        dates.forEach((date)=>{
-          totalTimes += (Object.keys(date.data()).length) 
-        })
-          const totalRef = doc(db, 'Dates/Total Times')
-          await setDoc(totalRef,{totalTimes : (totalTimes-1)})
-  
-          const colRef = collection(db,`AttendanceDB/Years/children/Fourth Year/semesters/sem2/majors`)
-        const q = query(colRef,orderBy('name'))
-        const majors = await getDocs(q)
-        majors.forEach(async (mj)=>{
-         if(mj.data().name){
-          allMajors.push(mj.data().name)
-          }
-        })
-        const stuRef = doc(db,`students/${updateId}`)
-        const student = await getDoc(stuRef)
-        for(const major of allMajors){
-          presentTimes += student.data()[`${major} present-times`]
-        }
-        const percent = (Math.floor((presentTimes/(totalTimes-1))*100) ) === NaN ? 0 : Math.floor((presentTimes/(totalTimes-1))*100)
-        await setDoc(stuRef,{
-          total_percent : percent
-        },{merge : true})
+        
+          
+        totalForAll(year,sem,stData)
+        
+       
       
     }
 
